@@ -10,25 +10,32 @@ RUN apt-get update && apt-get install -y \
     libmagick++-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Miniconda 설치
+# 3. Miniforge 설치
+# (Miniconda 대신 Miniforge를 사용하는 이유:
+#   - 기본 채널이 conda-forge로 고정되어 채널 충돌 없음
+#   - libmamba 솔버가 기본 탑재되어 의존성 해결이 빠르고 메모리 사용량이 적음
+#   기존 Miniconda + classic solver 조합은 jupyter+statsmodels+scipy를 한 번에
+#   풀 때 빌드러너에서 시간/메모리 한계로 종료되는 사례가 잦음.)
 ENV CONDA_DIR=/opt/conda
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
-    /bin/bash ~/miniconda.sh -b -p /opt/conda && \
-    rm ~/miniconda.sh
+RUN wget --quiet https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -O ~/miniforge.sh && \
+    /bin/bash ~/miniforge.sh -b -p /opt/conda && \
+    rm ~/miniforge.sh
 
 # 4. Conda 경로 설정 및 환경 생성
 ENV PATH=$CONDA_DIR/bin:$PATH
-RUN conda create -n r-reticulate python=3.10 -y && \
-    conda install -n r-reticulate -c conda-forge \
+RUN conda config --set channel_priority strict && \
+    conda config --set solver libmamba && \
+    conda create -n r-reticulate -y \
+        python=3.10 \
         numpy pandas matplotlib \
         scipy statsmodels patsy \
-        jupyter ipykernel \
-        -y
+        notebook ipykernel nbformat
 # 추가로 필요한 패키지 설치
 # - scipy        : 비선형 최소제곱(curve_fit), 카이제곱 분포
 # - statsmodels  : GLM (Binomial / Poisson / NegativeBinomial)
 # - patsy        : statsmodels formula API에 필요
-# - jupyter/ipykernel : Binder/주피터 노트북 변환에 필요
+# - notebook/ipykernel/nbformat : Binder/주피터 노트북 변환·실행에 필요
+#   ("jupyter" 메타패키지는 너무 무겁고 솔버 부담이 커서 핵심 구성요소만 명시)
 
 # 5. R 패키지 설치 (reticulate 및 필수 패키지)
 RUN R -e "install.packages(c('reticulate', 'remotes', 'IRkernel'))" && \

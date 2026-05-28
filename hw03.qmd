@@ -1057,25 +1057,27 @@ RUN apt-get update && apt-get install -y \
     libmagick++-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Miniconda 설치
+# 3. Miniforge 설치 (Miniconda 대신 — libmamba 솔버 + conda-forge 기본 채널)
 ENV CONDA_DIR=/opt/conda
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
-    /bin/bash ~/miniconda.sh -b -p /opt/conda && \
-    rm ~/miniconda.sh
+RUN wget --quiet https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -O ~/miniforge.sh && \
+    /bin/bash ~/miniforge.sh -b -p /opt/conda && \
+    rm ~/miniforge.sh
 
-# 4. Conda 경로 설정 및 환경 생성
+# 4. Conda 경로 설정 및 환경 생성 (libmamba + strict + 단일 호출)
 ENV PATH=$CONDA_DIR/bin:$PATH
-RUN conda create -n r-reticulate python=3.10 -y && \
-    conda install -n r-reticulate -c conda-forge \
+RUN conda config --set channel_priority strict && \
+    conda config --set solver libmamba && \
+    conda create -n r-reticulate -y \
+        python=3.10 \
         numpy pandas matplotlib \
         scipy statsmodels patsy \
-        jupyter ipykernel \
-        -y
+        notebook ipykernel nbformat
 # 추가로 필요한 패키지 설치
 # - scipy        : curve_fit(문제 2-1.1), 카이제곱 분포 (진단)
 # - statsmodels  : GLM (Binomial / Poisson / NegativeBinomial)
 # - patsy        : statsmodels formula API
-# - jupyter/ipykernel : Binder용 .ipynb 실행 환경
+# - notebook/ipykernel/nbformat : Binder용 .ipynb 실행 환경
+#   ("jupyter" 메타패키지 대신 핵심만 명시: 솔버 부담↓)
 
 # 5. R 패키지 설치 (reticulate 및 필수 패키지)
 RUN R -e "install.packages(c('reticulate', 'remotes', 'IRkernel'))" && \
@@ -1137,6 +1139,15 @@ WORKDIR /home/rstudio
 ### 답안
 
 숙제 2에서 사용했던 [`publish.yml`](./.github/workflows/publish.yml)을 그대로 가져와 끝부분에 가이드에서 제시한 GHCR 푸시 단계를 덧붙였다.
+
+::: {layout-ncol=2}
+
+![`publish.yml` 내용](./3-2_publish_Content.png){#fig-publish-content}
+
+![저장소에 추가된 `publish.yml` (스크린샷)](./3-2_Screenshot.png){#fig-publish-screenshot}
+
+:::
+
 가이드 템플릿에 비해 다음과 같은 부분만 추가/보강하였다.
 
 최종 워크플로 파일은 저장소의 [.github/workflows/publish.yml](./.github/workflows/publish.yml) 에 저장되어 있다.
