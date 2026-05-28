@@ -1168,7 +1168,7 @@ GitHub Page를 사용하여 저장소를 웹페이지로 활용하는 부분은 
 이 숙제의 상세 분석 결과는 아래 링크에서 확인하실 수 있습니다.
 
 * [분석 리포트 (HTML)](./hw03.html)
-* [주피터 노트북 (ipynb)](https://mybinder.org/v2/ghcr/<유저명>/my-r-env/latest?filepath=hw03.ipynb
+* [주피터 노트북 (ipynb)](https://mybinder.org/v2/ghcr/<유저명>/my-r-env/latest?filepath=hw03.ipynb)
 ```
 
 여기서 `<유저명>`은 제출자의 GitHub 유저 아이디이다.
@@ -1176,4 +1176,9 @@ GitHub Page를 사용하여 저장소를 웹페이지로 활용하는 부분은 
 작업을 GitHub 원격 저장소로 push한 후 숙제 2 문제 3-3의 3, 4번 과정을 반복하라.
 
 ### 답안
+
+가이드에서 제시한 형식에 본인의 학번·이름과 GitHub 유저명 (`ano7142`) 을 채워 [`README.md`](./README.md) 를 저장소 최상위에 작성하였다.
+
+
+![저장소 페이지 (README 렌더링 결과)](./3-3_Screenshot.png){#fig-3-3-screenshot width=80%}
 
