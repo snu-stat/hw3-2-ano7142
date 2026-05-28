@@ -13,6 +13,21 @@ jobs:
       packages: write   # GHCR(ghcr.io) 이미지 푸시에 필요 (숙제 3 추가)
 
     steps:
+      # GitHub-hosted Ubuntu 러너는 디스크가 ~14GB 뿐이라 R/Python/Docker 빌드를
+      # 모두 하면 'No space left on device' 가 자주 발생한다.
+      # 사용하지 않는 사전설치 SW(Android SDK, .NET, Haskell 등) 를 지워
+      # 약 28GB의 여유 공간을 확보한다.
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false       # actions/setup-* 의 캐시는 보존
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: false    # Docker 데몬·기본 이미지는 보존
+          swap-storage: true
+
       - name: Check out repository
         uses: actions/checkout@v4
 
@@ -114,6 +129,17 @@ jobs:
       # 숙제 3 추가 단계: Dockerfile을 빌드해서 GHCR에 이미지를 푸시
       # (이 이미지를 mybinder.org가 가져와 .ipynb를 온라인으로 실행)
       # ============================================================
+
+      # gh-pages 배포가 끝났으므로 렌더 산출물·캐시를 정리해 디스크 확보
+      - name: Reclaim disk before Docker build
+        run: |
+          echo "==== before cleanup ===="
+          df -h
+          sudo rm -rf _site _freeze "$HOME/.cache" "$HOME/.local/share/Trash" || true
+          docker system prune -af --volumes || true
+          echo "==== after cleanup ===="
+          df -h
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
