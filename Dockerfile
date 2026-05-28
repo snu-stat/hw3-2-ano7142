@@ -1,13 +1,14 @@
 # 1. 기반 이미지 설정
 FROM rocker/tidyverse:4.4.0
 
-# 2. 시스템 의존성 설치 (ImageMagick 포함)
+# 2. 시스템 의존성 설치 (ImageMagick + IRkernel의 ZMQ 의존성)
 USER root
 RUN apt-get update && apt-get install -y \
     wget \
     git \
     imagemagick \
     libmagick++-dev \
+    libzmq3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # 3. Miniforge 설치
@@ -37,15 +38,25 @@ RUN conda config --set channel_priority strict && \
 # - notebook/ipykernel/nbformat : Binder/주피터 노트북 변환·실행에 필요
 #   ("jupyter" 메타패키지는 너무 무겁고 솔버 부담이 커서 핵심 구성요소만 명시)
 
-# 5. R 패키지 설치 (reticulate 및 필수 패키지)
-RUN R -e "install.packages(c('reticulate', 'remotes', 'IRkernel'))" && \
+# 5-1. R 패키지 설치 (reticulate, remotes, IRkernel)
+#      - 패키지 설치 실패 시 빌드를 즉시 종료시키기 위해 requireNamespace 로 검증
+RUN R -e "install.packages(c('reticulate', 'remotes', 'IRkernel'), repos='https://cloud.r-project.org')" && \
+    R -e "stopifnot(all(sapply(c('reticulate','remotes','IRkernel'), requireNamespace, quietly=TRUE)))"
+
+# 5-2. IRkernel 의 Jupyter kernelspec 등록
+#      installspec() 은 내부적으로 'jupyter kernelspec install' 을 호출하므로
+#      jupyter 실행 파일이 PATH 에서 검색되어야 한다.
+#      jupyter 는 r-reticulate 환경에만 설치되어 있으므로 해당 env 의 bin 을
+#      이 RUN 명령에 한해 PATH 앞쪽에 끼워준다.
+RUN PATH="$CONDA_DIR/envs/r-reticulate/bin:$PATH" \
     R -e "IRkernel::installspec(user = FALSE)"
-# 추가로 필요한 패키지 설치
+
+# 5-3. 본 과제 분석에 필요한 R 패키지 추가 설치
 # - Lahman  : 메이저리그 Teams 데이터 (문제 2-1 ~ 2-4)
 # - NHANES  : 흡연 예측 자료 (문제 1-1)
 # - broom   : tidy() / augment() 출력 정리
 # - MASS    : stepAIC, glm.nb (tidyverse 이미지에 포함되어 있으나 명시)
-RUN R -e "install.packages(c('Lahman', 'NHANES', 'broom', 'MASS'))"
+RUN R -e "install.packages(c('Lahman', 'NHANES', 'broom', 'MASS'), repos='https://cloud.r-project.org')"
 
 # 6. reticulate가 사용할 Python 경로 고정 (환경 변수)
 ENV RETICULATE_PYTHON=/opt/conda/envs/r-reticulate/bin/python
