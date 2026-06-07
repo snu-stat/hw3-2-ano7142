@@ -61,9 +61,24 @@ RUN R -e "install.packages(c('Lahman', 'NHANES', 'broom', 'MASS'), repos='https:
 # 6. reticulate가 사용할 Python 경로 고정 (환경 변수)
 ENV RETICULATE_PYTHON=/opt/conda/envs/r-reticulate/bin/python
 
-# 7. (선택) Binder 사용자를 위한 권한 설정
-# Binder는 보통 'jovyan' 유저 권한으로 실행
-RUN chown -R ${NB_USER:-root} /opt/conda
+# 7. Binder용 jovyan 유저 생성
+#    rocker 이미지의 기본 사용자 'rstudio' 를 Binder 가 기대하는 'jovyan'(UID 1000)
+#    으로 이름·홈디렉토리를 바꾸고, conda 와 홈디렉토리 소유권을 넘겨준다.
+ENV NB_USER=jovyan
+ENV NB_UID=1000
+RUN usermod -l ${NB_USER} rstudio && \
+    usermod -d /home/${NB_USER} -m ${NB_USER} && \
+    chown -R ${NB_USER} /opt/conda /home/${NB_USER}
 
-# 기본 실행 경로 설정
-WORKDIR /home/rstudio
+# 8. 노트북 파일 복사
+#    quarto render 로 생성된 _site/hw03.ipynb 를 jovyan 홈에 넣어 Binder 가
+#    곧바로 열 수 있도록 한다. (CI 의 디스크 정리 단계에서 _site 를 지우지 않도록
+#    publish.yml 을 함께 수정하였다.)
+COPY _site/hw03.ipynb /home/${NB_USER}/hw03.ipynb
+RUN chown ${NB_USER}:users /home/${NB_USER}/hw03.ipynb
+
+USER ${NB_USER}
+WORKDIR /home/${NB_USER}
+
+# Binder가 기대하는 포트
+EXPOSE 8888

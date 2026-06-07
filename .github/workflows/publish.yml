@@ -135,7 +135,10 @@ jobs:
         run: |
           echo "==== before cleanup ===="
           df -h
-          sudo rm -rf _site _freeze "$HOME/.cache" "$HOME/.local/share/Trash" || true
+          # Dockerfile 의 'COPY _site/hw03.ipynb' 가 빌드 컨텍스트에서 이 파일을
+          # 필요로 하므로 _site 는 지우지 않는다. (이전에는 _site 까지 지워서
+          # COPY 가 실패했었다.)  _freeze·캐시·미사용 도커 이미지만 정리한다.
+          sudo rm -rf _freeze "$HOME/.cache" "$HOME/.local/share/Trash" || true
           docker system prune -af --volumes || true
           echo "==== after cleanup ===="
           df -h
