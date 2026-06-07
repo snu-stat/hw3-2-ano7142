@@ -1,0 +1,9 @@
+# Binder(repo2docker)가 gh-pages 브랜치에서 읽는 환경 명세.
+# hw03.ipynb 는 Quarto 가 생성한 "렌더된" 노트북(커널: python3)이라
+# 온라인에서 열어 보는 것이 목적이며, 아래는 본 분석의 Python 의존성이다.
+numpy
+pandas
+matplotlib
+scipy
+statsmodels
+patsy
