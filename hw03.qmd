@@ -1166,7 +1166,11 @@ Binder 링크는 가이드가 새로 제시한 **`gh`(GitHub) 경로** 방식을
 https://mybinder.org/v2/gh/snu-stat/hw3-2-ano7142/gh-pages?filepath=hw03.ipynb
 ```
 
-가이드 원안의 `gh/<유저명>/snu-stat/<repo명>/gh-pages` 표기는 `<유저명>` 세그먼트가 하나 더 붙어 있으나, mybinder 의 `gh` 경로는 `<소유자>/<저장소>/<브랜치>` 세 세그먼트만 받는다. 따라서 실제 저장소 위치(소유자 = 조직 `snu-stat`, 저장소 = `hw3-2-ano7142`, 브랜치 = `gh-pages`)에 맞추어 위와 같이 작성하였다. 링크를 클릭하면 Binder 가 `gh-pages` 브랜치로부터 노트북 실행 환경을 띄우고 `?filepath=hw03.ipynb` 로 지정한 노트북을 곧바로 열어 준다. 한편 문제 3-2에서 빌드한 `ghcr.io/snu-stat/hw3-2-ano7142:latest` 이미지는 R·Python 패키지가 모두 설치된 **컨테이너화된 재현 환경**으로, 로컬에서 `docker run` 으로 동일한 노트북 환경을 재현하는 데 사용할 수 있다.
+가이드 원안의 `gh/<유저명>/snu-stat/<repo명>/gh-pages` 표기는 `<유저명>` 세그먼트가 하나 더 붙어 있으나, mybinder 의 `gh` 경로는 `<소유자>/<저장소>/<브랜치>` 세 세그먼트만 받는다. 따라서 실제 저장소 위치(소유자 = 조직 `snu-stat`, 저장소 = `hw3-2-ano7142`, 브랜치 = `gh-pages`)에 맞추어 위와 같이 작성하였다.
+
+**환경 명세(`requirements.txt`) 추가.** mybinder 의 `gh` 경로는 대상 브랜치 루트에서 환경 명세 파일(`Dockerfile`·`requirements.txt`·`environment.yml` 등)을 찾아 [repo2docker](https://repo2docker.readthedocs.io/)로 이미지를 빌드한다. 그런데 `gh-pages` 브랜치에는 렌더 산출물(`_site`)만 배포되어 명세가 없으므로, 처음에는 *"No environment specification found"* 로 빌드가 실패한다. 더욱이 `hw03.ipynb` 는 Quarto 가 생성한 **렌더된 노트북**(커널 `python3`, 분석 결과가 마크다운으로 baked-in)이라 온라인에서 *열어 보는 것*이 목적이지 R 전체 환경을 재실행할 필요는 없다. 따라서 분석에 사용한 Python 패키지 목록을 담은 경량 `requirements.txt` 를 두고, `publish.yml` 배포 단계에서 이를 `_site/` 로 복사하여 `gh-pages` 루트에 포함되도록 하였다. 이렇게 하면 Binder 가 이 명세로 Python 3 환경을 빌드하고 `?filepath=hw03.ipynb` 노트북을 곧바로 열어 준다.
+
+한편 문제 3-2에서 빌드한 `ghcr.io/snu-stat/hw3-2-ano7142:latest` 이미지는 R·Python 패키지가 모두 설치된 **컨테이너화된 재현 환경**으로, 로컬에서 `docker run` 으로 분석 전체를 재실행·재현하는 데 사용할 수 있다. (공개 mybinder.org 는 임의의 레지스트리 이미지를 URL 로 직접 끌어오지 못하므로, 온라인 실행은 위의 repo2docker 경로로, 완전한 재현은 GHCR 이미지로 분담한다.)
 
 작업을 GitHub 원격 저장소로 push 한 뒤, 숙제 2 문제 3-3의 3·4번 과정(GitHub Pages 활성화 확인 및 링크 동작 확인)을 반복하였다.
 

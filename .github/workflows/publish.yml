@@ -118,6 +118,13 @@ jobs:
           quarto render
         shell: bash -l {0}
 
+      # Binder(repo2docker)는 빌드 대상 브랜치 루트에서 환경 명세를 찾는다.
+      # gh-pages 에는 렌더 산출물(_site)만 배포되므로, 환경 명세인
+      # requirements.txt 를 _site 에 함께 복사해 gh-pages 루트에 포함시킨다.
+      # (이게 없으면 'No environment specification found' 로 Binder 빌드 실패)
+      - name: Add Binder (repo2docker) config to site
+        run: cp requirements.txt _site/requirements.txt
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
