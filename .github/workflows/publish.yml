@@ -155,4 +155,10 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/my-r-env:latest
+          # 조직 저장소(snu-stat/...)에서는 모든 학생이 같은 'my-r-env' 이름을
+          # 쓰면 패키지가 충돌하여 먼저 만든 저장소만 소유하고 나머지는
+          # 'denied: permission_denied: write_package' 가 발생한다.
+          # 저장소 전용 이름(github.repository = <owner>/<repo>)을 사용하면
+          # 이 저장소가 소유하는 새 패키지로 생성되어 push 권한이 보장되고
+          # 다른 제출물과 충돌하지 않는다.  ->  ghcr.io/snu-stat/hw3-2-ano7142:latest
+          tags: ghcr.io/${{ github.repository }}:latest
